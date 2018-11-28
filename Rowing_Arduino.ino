@@ -1,3 +1,5 @@
+#include <LiquidCrystal.h>
+
 #include <SoftwareSerial.h>
 #include <LiquidCrystal.h>
 LiquidCrystal lcd(9, 7, 8, 12, 10, 11);
@@ -28,22 +30,9 @@ String unidade;
 bool print;
 byte channels = B00000000;
 byte set_channels = B00000000;
-// B00000000 = Estado Inicial
-// B00000011 = Extensão
-// B00001100 = Flexão
-// B00001111 = Extensão + Flexão
-// B00110000 = -
-// B00110011 = (Extensão & Aux_Ext)
-// B00111100 = -
-// B00111111 = (Extensão & Aux_Ext) + Flexão
-// B11000000 = -
-// B11000011 = -
-// B11001100 = (Flexão & Aux_Flex)
-// B11001111 = Extensao + (Flexão & Aux_Flex)
-// B11110000 = -
-// B11110011 = -
-// B11111100 = -
-// B11111111 = (Extensão & Aux_Ext) + (Flexão & Aux_Flex)
+bool run = false;
+bool config = true;
+
 void setup()
 {
   // put your setup code here, to run once:
@@ -60,14 +49,72 @@ void setup()
 
 void loop()
 {
-  // put your main code here, to run repeatedly:
   PonteiroDeFuncao = StateConect;
-  // aponta para o estado inicial. Nunca esquecer de informar um estado inicial
-  // (senão, nesse caso em específico, pode haver um erro fatal / hard fault).
   while (1)
   {
-    (* PonteiroDeFuncao) ();
-    // chama a função apontada pelo ponteiro de função (logo, chama o estado corrente)
+    while (config)
+    {
+      (* PonteiroDeFuncao) ();
+      // chama a função apontada pelo ponteiro de função (logo, chama o estado corrente)
+    }
+    while (run)
+    {
+      int state_0 = 0;
+      int state_1 = 1;
+      digitalWrite(LED_Alerta, LOW);
+      while (stim)
+      {
+        if (digitalRead(sobe) == LOW)
+        {
+          digitalWrite(sobe, HIGH);
+          state_0 = 1;
+          lcd.clear();
+          lcd.print("Extensao");
+          digitalWrite(LED_Direito, HIGH);
+        }
+        else
+          if (digitalRead(desce) == LOW)
+          {
+            digitalWrite(desce, HIGH);
+            state_0 = 2;
+            lcd.clear();
+            lcd.print("Flexao");
+            digitalWrite(LED_Esquerdo, HIGH);
+          }
+        else
+          if (digitalRead(acaba) == LOW)
+          {
+            digitalWrite(acaba, HIGH);
+            state_0 = 3;
+          }
+        else
+        {
+          state_0 = 0;
+        }
+        if (state_1 != state_0)
+        {
+          Serial.print(state_0);
+          state_1 = state_0;
+          lcd.clear();
+          lcd.print("    Pressione   ");
+          lcd.setCursor(0, 1);
+          lcd.print("<-Flex     Ext->");
+          digitalWrite(LED_Esquerdo, LOW);
+          digitalWrite(LED_Direito, LOW);
+        }
+        if (state_0 == 3)
+        {
+          Serial.print(state_0);
+          stim = false;
+          lcd.clear();
+          lcd.print("Fim");
+        }
+        delay(30);
+      }
+      delay(500);
+      digitalWrite(LED_Alerta, HIGH);
+      delay(500);
+    }
   }
   system("PAUSE");
   // return 0;
@@ -317,31 +364,31 @@ void StateSetFreq()
 void Send(void)
 {
   if (B00000000 == channels)
-    // Estado Inicial
+  // Estado Inicial
   mode = 1;
   if (B00000011 == channels)
-    // Extensão
+  // Extensão
   mode = 1;
   if (B00001100 == channels)
-    // Flexão
+  // Flexão
   mode = 2;
   if (B00001111 == channels)
-    // Extensão + Flexão
+  // Extensão + Flexão
   mode = 3;
   if (B00110011 == channels)
-    // (Extensão & Aux_Ext)
+  // (Extensão & Aux_Ext)
   mode = 4;
   if (B00111111 == channels)
-    // (Extensão & Aux_Ext) + Flexão
+  // (Extensão & Aux_Ext) + Flexão
   mode = 5;
   if (B11001100 == channels)
-    // (Flexão & Aux_Flex)
+  // (Flexão & Aux_Flex)
   mode = 6;
   if (B11001111 == channels)
-    // Extensao + (Flexão & Aux_Flex)
+  // Extensao + (Flexão & Aux_Flex)
   mode = 7;
   if (B11111111 == channels)
-    // (Extensão & Aux_Ext) + (Flexão & Aux_Flex)
+  // (Extensão & Aux_Ext) + (Flexão & Aux_Flex)
   mode = 8;
   // enviando dados pela serial (bluetooth) //////////////////////////////////////////////////////////////
   Serial.print("c"); // marcador de corrente_quad
@@ -382,61 +429,8 @@ void waiting(void)
 
 void Runing(void)
 {
-  int state_0 = 0;
-  int state_1 = 1;
-  digitalWrite(LED_Alerta, LOW);
-  while (stim)
-  {
-    if (digitalRead(sobe) == LOW)
-    {
-      digitalWrite(sobe, HIGH);
-      state_0 = 1;
-      lcd.clear();
-      lcd.print("Extensao");
-      digitalWrite(LED_Direito, HIGH);
-    }
-    else
-      if (digitalRead(desce) == LOW)
-      {
-        digitalWrite(desce, HIGH);
-        state_0 = 2;
-        lcd.clear();
-        lcd.print("Flexao");
-        digitalWrite(LED_Esquerdo, HIGH);
-      }
-    else
-      if (digitalRead(acaba) == LOW)
-      {
-        digitalWrite(acaba, HIGH);
-        state_0 = 3;
-      }
-    else
-    {
-      state_0 = 0;
-    }
-    if (state_1 != state_0)
-    {
-      Serial.print(state_0);
-      state_1 = state_0;
-      lcd.clear();
-      lcd.print("    Pressione   ");
-      lcd.setCursor(0, 1);
-      lcd.print("<-Flex     Ext->");
-      digitalWrite(LED_Esquerdo, LOW);
-      digitalWrite(LED_Direito, LOW);
-    }
-    if (state_0 == 3)
-    {
-      Serial.print(state_0);
-      stim = false;
-      lcd.clear();
-      lcd.print("Fim");
-    }
-    delay(30);
-  }
-  delay(500);
-  digitalWrite(LED_Alerta, HIGH);
-  delay(500);
+  run = true;
+  config = false;
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////
