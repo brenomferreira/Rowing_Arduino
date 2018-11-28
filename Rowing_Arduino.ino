@@ -1,5 +1,4 @@
 #include <LiquidCrystal.h>
-
 #include <SoftwareSerial.h>
 #include <LiquidCrystal.h>
 LiquidCrystal lcd(9, 7, 8, 12, 10, 11);
@@ -13,16 +12,16 @@ String flag;
 int acaba = 3;
 int desce = 4;
 int sobe = 2;
-int corrente_CH12 = 40;
-int corrente_CH34 = 50;
-int corrente_CH56 = 40;
-int corrente_CH78 = 50;
-int freq = 50;
+int corrente_CH12 = 10;
+int corrente_CH34 = 6;
+int corrente_CH56 = 10;
+int corrente_CH78 = 6;
+int freq = 40;
 int mode = 0;
 bool stim = true;
 bool aux_CH12 = false;
 bool aux_CH34 = false;
-int pw = 500;
+int pw = 300;
 int passo;
 int variavel;
 String text;
@@ -32,7 +31,6 @@ byte channels = B00000000;
 byte set_channels = B00000000;
 bool run = false;
 bool config = true;
-
 void setup()
 {
   // put your setup code here, to run once:
@@ -363,33 +361,33 @@ void StateSetFreq()
 
 void Send(void)
 {
-  if (B00000000 == channels)
   // Estado Inicial
-  mode = 1;
-  if (B00000011 == channels)
+  if (B00000000 == channels)
+    mode = 0;
   // Extensão
-  mode = 1;
-  if (B00001100 == channels)
+  if (B00000011 == channels)
+    mode = 1;
   // Flexão
-  mode = 2;
-  if (B00001111 == channels)
+  if (B00001100 == channels)
+    mode = 2;
   // Extensão + Flexão
-  mode = 3;
-  if (B00110011 == channels)
+  if (B00001111 == channels)
+    mode = 3;
   // (Extensão & Aux_Ext)
-  mode = 4;
-  if (B00111111 == channels)
+  if (B00110011 == channels)
+    mode = 4;
   // (Extensão & Aux_Ext) + Flexão
-  mode = 5;
-  if (B11001100 == channels)
+  if (B00111111 == channels)
+    mode = 5;
   // (Flexão & Aux_Flex)
-  mode = 6;
-  if (B11001111 == channels)
+  if (B11001100 == channels)
+    mode = 6;
   // Extensao + (Flexão & Aux_Flex)
-  mode = 7;
-  if (B11111111 == channels)
+  if (B11001111 == channels)
+    mode = 7;
   // (Extensão & Aux_Ext) + (Flexão & Aux_Flex)
-  mode = 8;
+  if (B11111111 == channels)
+    mode = 8;
   // enviando dados pela serial (bluetooth) //////////////////////////////////////////////////////////////
   Serial.print("c"); // marcador de corrente_quad
   func_dim_string_to_Stim(corrente_CH12);
