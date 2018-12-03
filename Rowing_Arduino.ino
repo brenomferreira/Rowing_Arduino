@@ -1,48 +1,48 @@
 #include <LiquidCrystal.h>
-#include <SoftwareSerial.h>
 #include <LiquidCrystal.h>
+#include <SoftwareSerial.h>
 LiquidCrystal lcd(9, 7, 8, 12, 10, 11);
 #define LED_Alerta 6 // Pin is connected to the LED ALERTA
 #define LED_Direito 5 // Pin is connected to the LED DIREITO
 #define LED_Esquerdo 13 // Pin is connected to the LED ESQUERDO
-// ponteiro de função da máquina de estados.
-// Ele aponta sempre para a função da máquina de estados que deve ser executada
-void(* PonteiroDeFuncao) ();
-String flag;
-int acaba = 3;
-int desce = 4;
-int sobe = 2;
-int corrente_CH12 = 10;
-int corrente_CH34 = 6;
-int corrente_CH56 = 10;
-int corrente_CH78 = 6;
-int freq = 40;
-int mode = 0;
-bool stim = true;
+/**
+* ponteiro de função da máquina de estados. Ele aponta sempre para a função da
+* máquina de estados que deve ser executada */
 bool aux_CH12 = false;
 bool aux_CH34 = false;
-int pw = 300;
-int passo;
-int variavel;
-String text;
-String unidade;
+bool config = true;
 bool print;
+bool run = false;
+bool stim = true;
 byte channels = B00000000;
 byte set_channels = B00000000;
-bool run = false;
-bool config = true;
+char acaba = 3;
+char corrente_CH12 = 10;
+char corrente_CH34 = 6;
+char corrente_CH56 = 10;
+char corrente_CH78 = 6;
+char desce = 4;
+char freq = 40;
+char passo;
+char sobe = 2;
+int mode = 0;
+int pw = 300;
+int variavel;
+String flag;
+String text;
+String unidade;
+void(* PonteiroDeFuncao) ();
 void setup()
 {
-  // put your setup code here, to run once:
   lcd.begin(16, 2);
   Serial.begin(9600);
-  Serial.flush(); // Clear receive buffer.
+  Serial.flush(); // Limpar receber buffer.
   pinMode(acaba, INPUT_PULLUP);
   pinMode(desce, INPUT_PULLUP);
   pinMode(sobe, INPUT_PULLUP);
-  pinMode(LED_Alerta, OUTPUT); // Sets pin as OUTPUT.
-  pinMode(LED_Direito, OUTPUT); // Sets pin as OUTPUT.
-  pinMode(LED_Esquerdo, OUTPUT); // Sets pin as OUTPUT.
+  pinMode(LED_Alerta, OUTPUT);
+  pinMode(LED_Direito, OUTPUT);
+  pinMode(LED_Esquerdo, OUTPUT);
 }
 
 void loop()
@@ -52,8 +52,11 @@ void loop()
   {
     while (config)
     {
+      /**
+      * chama a função apontada pelo ponteiro de função (logo, chama o estado
+      * corrente)
+      */
       (* PonteiroDeFuncao) ();
-      // chama a função apontada pelo ponteiro de função (logo, chama o estado corrente)
     }
     while (run)
     {
@@ -109,15 +112,18 @@ void loop()
         }
         delay(30);
       }
-      delay(500);
+      delay(250);
       digitalWrite(LED_Alerta, HIGH);
-      delay(500);
+      delay(250);
     }
   }
   system("PAUSE");
-  // return 0;
 }
 
+/*-------------------------------------------------------------------------*/
+/**
+* @brief      Estado inicial de conexão das portas
+*/
 void StateConect(void)
 {
   lcd.clear();
@@ -126,7 +132,9 @@ void StateConect(void)
   delay(1000);
   lcd.setCursor(0, 0);
   lcd.print("   Conectando...");
-  // verificando conexão ////////////////////////////////////////////////////////////
+  /**
+  * verificando conexão
+  */
   bool conexao = false;
   while (conexao == false)
   {
@@ -136,13 +144,17 @@ void StateConect(void)
       if (flag.equals("a"))
       {
         conexao = true;
-        PonteiroDeFuncao = StateSetCh;
+        PonteiroDeFuncao = StateSetMov;
       }
     }
   }
 }
 
-void StateSetCh(void)
+/**
+* @brief      { Estado que seleciona a quantidade de movimento:
+*             (extensão)e/ou(flexão) }
+*/
+void StateSetMov(void)
 {
   // para a funcao
   // int mode = 2;
@@ -176,7 +188,7 @@ void StateSetCh(void)
     lcd.print("Extensao+flexao");
     channels = B00001111;
   }
-  delay(100);
+  delay(250);
   if (digitalRead(acaba) == LOW)
   {
     if (mode == 2)
@@ -187,6 +199,10 @@ void StateSetCh(void)
   }
 }
 
+/**
+* @brief      { Estado para selecionar se o canal 12 (CH12) necessita de canal
+*             auxiliar, se sim: o canal auxíliar será o CH56 }
+*/
 void SetAuxCH12(void)
 {
   text = "Ext.c/ Auxiliar?";
@@ -203,7 +219,7 @@ void SetAuxCH12(void)
     lcd.setCursor(0, 1);
     lcd.print("Nao             ");
     set_channels = B00000000;
-    delay(100);
+    delay(250);
   }
   if (variavel == 1)
   {
@@ -211,7 +227,7 @@ void SetAuxCH12(void)
     lcd.setCursor(0, 1);
     lcd.print("Sim, CH 5/6");
     set_channels = B00110000;
-    delay(100);
+    delay(250);
   }
   if (digitalRead(acaba) == LOW)
   {
@@ -224,6 +240,10 @@ void SetAuxCH12(void)
   }
 }
 
+/**
+* @brief      { Estado para selecionar se o canal 12 (CH12) necessita de canal
+*             auxiliar, se sim: o canal auxíliar será o CH56 }
+*/
 void SetAuxCH34(void)
 {
   text = "Flex.c/ Auxiliar?";
@@ -240,7 +260,7 @@ void SetAuxCH34(void)
     lcd.setCursor(0, 1);
     lcd.print("Nao             ");
     set_channels = B00000000;
-    delay(100);
+    delay(250);
   }
   if (variavel == 1)
   {
@@ -248,7 +268,7 @@ void SetAuxCH34(void)
     lcd.setCursor(0, 1);
     lcd.print("Sim, CH 7/8");
     set_channels = B11000000;
-    delay(100);
+    delay(250);
   }
   if (digitalRead(acaba) == LOW)
   {
@@ -258,6 +278,10 @@ void SetAuxCH34(void)
   delay(250);
 }
 
+/**
+* @brief      Estado para selecionar as amplitudes de todos os canais
+*             selecionados anteriormente
+*/
 void StateSetAmp(void)
 {
   if ((B00000011 & channels) > 0)
@@ -273,7 +297,7 @@ void StateSetAmp(void)
       print = true;
       corrente_CH12 = func_set_parametro(variavel, passo, text, unidade, print);
       corrente_CH56 = corrente_CH12;
-      delay(100);
+      delay(250);
     }
   }
   if ((B00110000 & channels) > 0)
@@ -288,7 +312,7 @@ void StateSetAmp(void)
       unidade = "mA (CH [5,6])";
       print = true;
       corrente_CH56 = func_set_parametro(variavel, passo, text, unidade, print);
-      delay(100);
+      delay(250);
     }
   }
   if ((B00001100 & channels) > 0)
@@ -304,7 +328,7 @@ void StateSetAmp(void)
       print = true;
       corrente_CH34 = func_set_parametro(variavel, passo, text, unidade, print);
       corrente_CH78 = corrente_CH34;
-      delay(100);
+      delay(250);
     }
   }
   if ((B11000000 & channels) > 0)
@@ -319,22 +343,25 @@ void StateSetAmp(void)
       unidade = "mA (CH [7,8])";
       print = true;
       corrente_CH78 = func_set_parametro(variavel, passo, text, unidade, print);
-      delay(100);
+      delay(250);
     }
   }
   PonteiroDeFuncao = StateSetLP;
 }
 
+/**
+* @brief      Estado para selecionar a Largura de Pulso (única para todos os
+*             canais)
+*/
 void StateSetLP(void)
 {
-  // largura de pulso
   text = "Largura de Pulso:";
   variavel = pw;
   passo = 10;
   unidade = "ms";
   print = true;
   pw = func_set_parametro(variavel, passo, text, unidade, print);
-  delay(500);
+  delay(250);
   if (digitalRead(acaba) == LOW)
   {
     PonteiroDeFuncao = StateSetFreq;
@@ -342,16 +369,18 @@ void StateSetLP(void)
   }
 }
 
-void StateSetFreq()
+/**
+* @brief      Estado para selecionar a Frequencia (única para todos os canais)
+*/
+void StateSetFreq(void)
 {
-  // Frequencia
   text = "Frequencia:";
   variavel = freq;
   passo = 5;
   unidade = "Hz";
   print = true;
   freq = func_set_parametro(variavel, passo, text, unidade, print);
-  delay(500);
+  delay(250);
   if (digitalRead(acaba) == LOW)
   {
     PonteiroDeFuncao = Send;
@@ -359,6 +388,9 @@ void StateSetFreq()
   }
 }
 
+/**
+* @brief      Estado para enviar os parâmetros para o Raspberry
+*/
 void Send(void)
 {
   // Estado Inicial
@@ -405,7 +437,7 @@ void Send(void)
   func_dim_string_to_Stim(mode);
   lcd.clear();
   lcd.print("Enviando");
-  delay(3000);
+  delay(2000);
   PonteiroDeFuncao = waiting;
   lcd.setCursor(0, 1);
   lcd.print(channels, BIN);
@@ -413,12 +445,14 @@ void Send(void)
   lcd.print(mode);
 }
 
+/**
+* @brief      Estado para aguardar a confirmação de recebimento pelo Raspberry
+*/
 void waiting(void)
 {
   if (Serial.available())
   {
     flag = Serial.readString();
-    // lcd.print (flag);
     if (flag.equals("a"))
     {
       lcd.clear();
@@ -429,13 +463,27 @@ void waiting(void)
   }
 }
 
+/**
+* @brief      Estado para iniciar o modo Run no loop()
+*/
 void Runing(void)
 {
   run = true;
   config = false;
 }
 
-// //////////////////////////////////////////////////////////////////////////////////////
+/**
+* @brief      Função para acrescentar/diminuir valores da variavel, conforme o
+*             passo escolhido, através dos botões do Handle
+*
+* @param      variavel  Define qual é a varialvel a ser alterada
+* @param      passo     Define o passo de acrescimo/decrescimo
+* @param      text      Texto informado no display
+* @param      unidade   Unidade de medida informada no display
+* @param      print     Indica se imprime as mensagens no display (true/false)
+*
+* @return     Retorna o valor da variavel definida através dos botções
+*/
 int func_set_parametro(int variavel, int passo, String text, String unidade, bool print)
 {
   int BTN_Down = HIGH;
@@ -454,14 +502,12 @@ int func_set_parametro(int variavel, int passo, String text, String unidade, boo
   {
     lcd.clear();
     lcd.print(text);
-    // while (digitalRead(acaba) == HIGH)
-    // {
     lcd.setCursor(0, 1);
     lcd.print(variavel);
     lcd.print(" ");
     lcd.print(unidade);
     lcd.print("   ");
-    delay(100);
+    delay(250);
   }
   if (BTN_Up == LOW && ((((millis() - lastSwitchTimeUp) > switchTimeUp) && lastSwitchTimeUp != 0) || lastReadingUp == HIGH))
   {
@@ -473,7 +519,7 @@ int func_set_parametro(int variavel, int passo, String text, String unidade, boo
     lastSwitchTimeUp = millis();
     lastReadingUp = BTN_Up;
     variavel = variavel + passo;
-    delay(100);
+    delay(250);
   }
   if (BTN_Up == HIGH)
   {
@@ -481,7 +527,8 @@ int func_set_parametro(int variavel, int passo, String text, String unidade, boo
     switchTimeUp = longSwitchTime;
     lastSwitchTimeUp = 0;
   }
-  if (BTN_Down == LOW && ((((millis() - lastSwitchTimeDown) > switchTimeDown) && lastSwitchTimeDown != 0) || lastReadingDown == HIGH))
+  if (BTN_Down == LOW &&
+  ((((millis() - lastSwitchTimeDown) > switchTimeDown) && lastSwitchTimeDown != 0) || lastReadingDown == HIGH))
   {
     // digitalWrite (desce, HIGH);
     if (((millis() - lastSwitchTimeDown) > switchTimeDown) && lastSwitchTimeDown != 0)
@@ -495,7 +542,7 @@ int func_set_parametro(int variavel, int passo, String text, String unidade, boo
     {
       variavel = 0;
     }
-    delay(100);
+    delay(250);
   }
   if (BTN_Down == HIGH)
   {
@@ -503,14 +550,16 @@ int func_set_parametro(int variavel, int passo, String text, String unidade, boo
     switchTimeDown = longSwitchTime;
     lastSwitchTimeDown = 0;
   }
-  // }
   return variavel;
 }
 
+/*-------------------------------------------------------------------------*/
 /**
-[func_dim_string_to_Stim Configura o envio dos parametros sempre com 3 algarismo]
-@param  {[int]}  entrada       [Parametro a ser convertido]
-@return {[int]}     [Parâmetro convertido em 3 algarismo]
+* @brief      Configura o envio de parametros sempre com 3 algarismo
+*
+* @param      entrada  Valor a ser convertido para 3 algarismo
+*
+* @return     Valor convertido com 3 algarismo
 */
 void func_dim_string_to_Stim(int entrada)
 {
@@ -533,12 +582,19 @@ void func_dim_string_to_Stim(int entrada)
     }
 }
 
+/*-------------------------------------------------------------------------*/
+/**
+* @brief      Conta a quantidade de Algarismo
+*
+* @param      numero  Entrada a ser avaliada
+*
+* @return     Quatidade de algarismo
+*/
 int qtdAlgarismos(int numero)
 {
   int cont = 0;
   while (numero != 0)
   {
-    // n = n/10
     numero /= 10;
     cont++;
   }
