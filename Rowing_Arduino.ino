@@ -420,7 +420,7 @@ void Send(void)
   // (Extensão & Aux_Ext) + (Flexão & Aux_Flex)
   if (B11111111 == channels)
     mode = 8;
-  // enviando dados pela serial (bluetooth) //////////////////////////////////////////////////////////////
+  // enviando dados pela serial
   Serial.print("c"); // marcador de corrente ch12
   func_dim_string_to_Stim(corrente_CH12);
   Serial.print("d"); // marcador de corrente ch34
