@@ -8,6 +8,7 @@ LiquidCrystal lcd(9, 7, 8, 12, 10, 11);
 /**
 * ponteiro de função da máquina de estados. Ele aponta sempre para a função da
 * máquina de estados que deve ser executada */
+bool aciona = false;
 bool aux_CH12 = false;
 bool aux_CH34 = false;
 bool config = true;
@@ -28,9 +29,11 @@ char sobe = 2;
 int mode = 0;
 int pw = 300;
 int variavel;
+long tempo_acionado = 3000;
 String flag;
 String text;
 String unidade;
+unsigned long ultimo_tempo = 0;
 void(* PonteiroDeFuncao) ();
 void setup()
 {
@@ -83,7 +86,7 @@ void loop()
             digitalWrite(LED_Esquerdo, HIGH);
           }
         else
-          if (digitalRead(acaba) == LOW)
+          if (reset_button() == LOW)
           {
             digitalWrite(acaba, HIGH);
             state_0 = 3;
@@ -189,7 +192,7 @@ void StateSetMov(void)
     channels = B00001111;
   }
   delay(250);
-  if (digitalRead(acaba) == LOW)
+  if (reset_button() == LOW)
   {
     if (mode == 2)
       PonteiroDeFuncao = SetAuxCH34;
@@ -229,7 +232,7 @@ void SetAuxCH12(void)
     set_channels = B00110000;
     delay(250);
   }
-  if (digitalRead(acaba) == LOW)
+  if (reset_button() == LOW)
   {
     channels = channels | set_channels;
     if (mode == 1)
@@ -270,9 +273,10 @@ void SetAuxCH34(void)
     set_channels = B11000000;
     delay(250);
   }
-  if (digitalRead(acaba) == LOW)
+  if (reset_button() == LOW)
   {
     channels = channels | set_channels;
+    set_channels = B00000011;
     PonteiroDeFuncao = StateSetAmp;
   }
   delay(250);
@@ -284,69 +288,55 @@ void SetAuxCH34(void)
 */
 void StateSetAmp(void)
 {
-  if ((B00000011 & channels) > 0)
+  if (set_channels == B00000000)
+    PonteiroDeFuncao = StateSetLP;
+  
+  if ((B00000011 & channels & set_channels) > 0)
   {
-    digitalWrite(acaba, HIGH);
+    text = "CorrenteExtensao";
+    variavel = corrente_CH12;
+    passo = 2;
+    unidade = "mA (CH [1,2])";
+    print = true;
+    corrente_CH12 = func_set_parametro(variavel, passo, text, unidade, print);
+    corrente_CH56 = corrente_CH12;
     delay(250);
-    while (digitalRead(acaba) == HIGH)
-    {
-      text = "CorrenteExtensao";
-      variavel = corrente_CH12;
-      passo = 2;
-      unidade = "mA (CH [1,2])";
-      print = true;
-      corrente_CH12 = func_set_parametro(variavel, passo, text, unidade, print);
-      corrente_CH56 = corrente_CH12;
-      delay(250);
-    }
   }
-  if ((B00110000 & channels) > 0)
+  if ((B00110000 & channels & set_channels) > 0)
   {
-    digitalWrite(acaba, HIGH);
+    text = "Corrente Aux Ext";
+    variavel = corrente_CH56;
+    passo = 2;
+    unidade = "mA (CH [5,6])";
+    print = true;
+    corrente_CH56 = func_set_parametro(variavel, passo, text, unidade, print);
     delay(250);
-    while (digitalRead(acaba) == HIGH)
-    {
-      text = "Corrente Aux Ext";
-      variavel = corrente_CH56;
-      passo = 2;
-      unidade = "mA (CH [5,6])";
-      print = true;
-      corrente_CH56 = func_set_parametro(variavel, passo, text, unidade, print);
-      delay(250);
-    }
   }
-  if ((B00001100 & channels) > 0)
+  if ((B00001100 & channels & set_channels) > 0)
   {
-    digitalWrite(acaba, HIGH);
+    text = "Corrente Flexao";
+    variavel = corrente_CH34;
+    passo = 2;
+    unidade = "mA (CH [3,4])";
+    print = true;
+    corrente_CH34 = func_set_parametro(variavel, passo, text, unidade, print);
+    corrente_CH78 = corrente_CH34;
     delay(250);
-    while (digitalRead(acaba) == HIGH)
-    {
-      text = "Corrente Flexao";
-      variavel = corrente_CH34;
-      passo = 2;
-      unidade = "mA (CH [3,4])";
-      print = true;
-      corrente_CH34 = func_set_parametro(variavel, passo, text, unidade, print);
-      corrente_CH78 = corrente_CH34;
-      delay(250);
-    }
   }
-  if ((B11000000 & channels) > 0)
+  if ((B11000000 & channels & set_channels) > 0)
   {
-    digitalWrite(acaba, HIGH);
+    text = "Corrente AuxFlex";
+    variavel = corrente_CH78;
+    passo = 2;
+    unidade = "mA (CH [7,8])";
+    print = true;
+    corrente_CH78 = func_set_parametro(variavel, passo, text, unidade, print);
     delay(250);
-    while (digitalRead(acaba) == HIGH)
-    {
-      text = "Corrente AuxFlex";
-      variavel = corrente_CH78;
-      passo = 2;
-      unidade = "mA (CH [7,8])";
-      print = true;
-      corrente_CH78 = func_set_parametro(variavel, passo, text, unidade, print);
-      delay(250);
-    }
   }
-  PonteiroDeFuncao = StateSetLP;
+  if (reset_button() == LOW)
+  {
+    set_channels = set_channels * 0x04;
+  }
 }
 
 /**
@@ -362,7 +352,7 @@ void StateSetLP(void)
   print = true;
   pw = func_set_parametro(variavel, passo, text, unidade, print);
   delay(250);
-  if (digitalRead(acaba) == LOW)
+  if (reset_button() == LOW)
   {
     PonteiroDeFuncao = StateSetFreq;
     digitalWrite(acaba, HIGH);
@@ -381,7 +371,7 @@ void StateSetFreq(void)
   print = true;
   freq = func_set_parametro(variavel, passo, text, unidade, print);
   delay(250);
-  if (digitalRead(acaba) == LOW)
+  if (reset_button() == LOW)
   {
     PonteiroDeFuncao = Send;
     digitalWrite(acaba, HIGH);
@@ -599,4 +589,52 @@ int qtdAlgarismos(int numero)
     cont++;
   }
   return cont;
+}
+
+/**
+* @brief      { function_description }
+*
+* @param      void  The void
+*
+* @return     { description_of_the_return_value }
+*/
+bool reset_button(void)
+{
+  bool saida;
+  unsigned long tempo_atual = millis();
+  ultimo_tempo = tempo_atual;
+  if (digitalRead(acaba) == LOW)
+    aciona = true;
+  else
+    saida = HIGH;
+  while (aciona)
+  {
+    unsigned long tempo_atual = millis();
+    // statement
+    if (digitalRead(acaba) == HIGH)
+    {
+      aciona = false;
+      saida = LOW;
+      digitalWrite(acaba, HIGH);
+      break;
+    }
+    if (tempo_atual - ultimo_tempo >= tempo_acionado)
+    {
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Reset");
+      delay(1500);
+      aciona = false;
+      saida = HIGH;
+      mode = 0;
+      channels = B00000000;
+      set_channels = channels;
+      variavel = 0;
+      PonteiroDeFuncao = StateSetMov;
+      // StateSetMov();
+      digitalWrite(acaba, HIGH);
+      // break;
+    }
+  }
+  return saida;
 }
