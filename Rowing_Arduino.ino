@@ -1,6 +1,9 @@
-#include <LiquidCrystal.h>
+#include <EEPROM.h>
 #include <LiquidCrystal.h>
 #include <SoftwareSerial.h>
+
+
+
 LiquidCrystal lcd(9, 7, 8, 12, 10, 11);
 #define LED_Alerta 6 // Pin is connected to the LED ALERTA
 #define LED_Direito 5 // Pin is connected to the LED DIREITO
@@ -16,17 +19,27 @@ bool run = false;
 bool stim = true;
 byte channels = B00000000;
 byte set_channels = B00000000;
+
+// int corrente_CH12 = 12;
+// int corrente_CH34 = 6;
+// int corrente_CH56 = 10;
+// int corrente_CH78 = 8;
+// int pw = 300;
+// int freq = 40;
+int corrente_CH12 = (int)EEPROM.read(0);
+int corrente_CH34 = (int)EEPROM.read(1);
+int corrente_CH56 = (int)EEPROM.read(2);
+int corrente_CH78 = (int)EEPROM.read(3);
+int pw = (int)(EEPROM.read(4)*10);
+int freq = (int)EEPROM.read(5);
+
+int temp = 0;
+
 char acaba = 3;
-char corrente_CH12 = 10;
-char corrente_CH34 = 6;
-char corrente_CH56 = 10;
-char corrente_CH78 = 6;
+char mode = 0;
 char desce = 4;
-char freq = 40;
 char passo;
 char sobe = 2;
-int mode = 0;
-int pw = 300;
 int variavel;
 String flag;
 String text;
@@ -47,6 +60,10 @@ void setup()
 
 void loop()
 {
+
+
+
+
   PonteiroDeFuncao = StateConect;
   while (1)
   {
@@ -300,7 +317,7 @@ void StateSetAmp(void)
       unidade = "mA (CH [1,2])";
       print = true;
       corrente_CH12 = func_set_parametro(variavel, passo, text, unidade, print);
-      corrente_CH56 = corrente_CH12;
+      //corrente_CH56 = corrente_CH12;
       delay(150);
     }
   }
@@ -331,7 +348,7 @@ void StateSetAmp(void)
       unidade = "mA (CH [3,4])";
       print = true;
       corrente_CH34 = func_set_parametro(variavel, passo, text, unidade, print);
-      corrente_CH78 = corrente_CH34;
+      //corrente_CH78 = corrente_CH34;
       delay(150);
     }
   }
@@ -447,6 +464,16 @@ void Send(void)
   lcd.print(channels, BIN);
   lcd.setCursor(15, 1);
   lcd.print(mode);
+
+EEPROM.write(0, (byte)corrente_CH12);
+EEPROM.write(1, (byte)corrente_CH34);
+EEPROM.write(2, (byte)corrente_CH56);
+EEPROM.write(3, (byte)corrente_CH78);
+EEPROM.write(4, (byte)(pw/10));
+EEPROM.write(5, (byte)freq);
+
+
+
 }
 
 /**
