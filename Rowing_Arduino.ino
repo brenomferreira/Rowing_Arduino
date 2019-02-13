@@ -1,9 +1,6 @@
 #include <EEPROM.h>
 #include <LiquidCrystal.h>
 #include <SoftwareSerial.h>
-
-
-
 LiquidCrystal lcd(9, 7, 8, 12, 10, 11);
 #define LED_Alerta 6 // Pin is connected to the LED ALERTA
 #define LED_Direito 5 // Pin is connected to the LED DIREITO
@@ -19,22 +16,23 @@ bool run = false;
 bool stim = true;
 byte channels = B00000000;
 byte set_channels = B00000000;
-
+String newText1;
+String newText2;
+String oldText1;
+String oldText2;
 // int corrente_CH12 = 12;
 // int corrente_CH34 = 6;
 // int corrente_CH56 = 10;
 // int corrente_CH78 = 8;
 // int pw = 300;
 // int freq = 40;
-int corrente_CH12 = (int)EEPROM.read(0);
-int corrente_CH34 = (int)EEPROM.read(1);
-int corrente_CH56 = (int)EEPROM.read(2);
-int corrente_CH78 = (int)EEPROM.read(3);
-int pw = (int)(EEPROM.read(4)*10);
-int freq = (int)EEPROM.read(5);
-
+int corrente_CH12 = (int) EEPROM.read(0);
+int corrente_CH34 = (int) EEPROM.read(1);
+int corrente_CH56 = (int) EEPROM.read(2);
+int corrente_CH78 = (int) EEPROM.read(3);
+int pw = (int) (EEPROM.read(4) * 10);
+int freq = (int) EEPROM.read(5);
 int temp = 0;
-
 char acaba = 3;
 char mode = 0;
 char desce = 4;
@@ -60,10 +58,6 @@ void setup()
 
 void loop()
 {
-
-
-
-
   PonteiroDeFuncao = StateConect;
   while (1)
   {
@@ -84,8 +78,8 @@ void loop()
       {
         if (digitalRead(acaba) == LOW)
         {
-            digitalWrite(acaba, HIGH);
-            state_0 = 3;
+          digitalWrite(acaba, HIGH);
+          state_0 = 3;
         }
         else
           if (digitalRead(desce) == LOW)
@@ -99,11 +93,11 @@ void loop()
         else
           if (digitalRead(sobe) == LOW)
           {
-          digitalWrite(sobe, HIGH);
-          state_0 = 1;
-          lcd.clear();
-          lcd.print("Extensao");
-          digitalWrite(LED_Direito, HIGH);
+            digitalWrite(sobe, HIGH);
+            state_0 = 1;
+            lcd.clear();
+            lcd.print("Extensao");
+            digitalWrite(LED_Direito, HIGH);
           }
         else
         {
@@ -130,7 +124,6 @@ void loop()
           config = true;
           PonteiroDeFuncao = StateSetMov;
         }
-
         delay(150);
       }
       delay(150);
@@ -147,12 +140,16 @@ void loop()
 */
 void StateConect(void)
 {
-  lcd.clear();
-  lcd.setCursor(0, 1);
-  lcd.print(" EMA FES-Rowing ");
+  // lcd.clear();
+  // lcd.setCursor(0, 1);
+  // lcd.print(" EMA FES-Rowing ");
+  newText1 = "   Conectando...";
+  newText2 = " EMA FES-Rowing ";
+  if ((oldText1 != newText1) | (oldText2 != newText2))
+    func_print_LCD(newText1, newText2);
   delay(1000);
-  lcd.setCursor(0, 0);
-  lcd.print("   Conectando...");
+  // lcd.setCursor(0, 0);
+  // lcd.print("   Conectando...");
   /**
   * verificando conexão
   */
@@ -179,9 +176,9 @@ void StateSetMov(void)
 {
   // para a funcao
   // int mode = 2;
-  text = "Sel.Movimento(s):";
-  lcd.clear();
-  lcd.print(text);
+  newText1 = "Sel.Movimento(s):";
+  if ((oldText1 != newText1) | (oldText2 != newText2))
+    func_print_LCD(newText1, "");
   variavel = mode;
   passo = 1;
   unidade = "";
@@ -189,24 +186,27 @@ void StateSetMov(void)
   mode = func_set_parametro(variavel, passo, text, unidade, print);
   if (mode == 0)
     mode = 3;
-  if (mode == 4)
+  if (mode > 3)
     mode = 1;
   if (mode == 1)
   {
-    lcd.setCursor(0, 1);
-    lcd.print("Extensao       ");
+    newText2 = "Extensao       ";
+    if ((oldText1 != newText1) | (oldText2 != newText2))
+      func_print_LCD(oldText1, newText2);
     channels = B00000011;
   }
   if (mode == 2)
   {
-    lcd.setCursor(0, 1);
-    lcd.print("         flexao");
+    newText2 = "         flexao";
+    if ((oldText1 != newText1) | (oldText2 != newText2))
+      func_print_LCD(oldText1, newText2);
     channels = B00001100;
   }
   if (mode == 3)
   {
-    lcd.setCursor(0, 1);
-    lcd.print("Extensao+flexao");
+    newText2 = "Extensao+flexao";
+    if ((oldText1 != newText1) | (oldText2 != newText2))
+      func_print_LCD(oldText1, newText2);
     channels = B00001111;
   }
   delay(150);
@@ -226,9 +226,9 @@ void StateSetMov(void)
 */
 void SetAuxCH12(void)
 {
-  text = "Ext.c/ Auxiliar?";
-  lcd.clear();
-  lcd.print(text);
+  newText1 = "Ext.c/ Auxiliar?";
+  if ((oldText1 != newText1) | (oldText2 != newText2))
+    func_print_LCD(newText1, "");
   passo = 1;
   unidade = "";
   variavel = aux_CH12;
@@ -237,18 +237,20 @@ void SetAuxCH12(void)
   if (variavel == 0)
   {
     aux_CH12 = false;
-    lcd.setCursor(0, 1);
-    lcd.print("Nao             ");
+    newText2 = "Nao             ";
+    if ((oldText1 != newText1) | (oldText2 != newText2))
+      func_print_LCD(oldText1, newText2);
     set_channels = B00000000;
-    delay(150);
+    // delay(150);
   }
   if (variavel == 1)
   {
     aux_CH12 = true;
-    lcd.setCursor(0, 1);
-    lcd.print("Sim, CH 5/6");
+    newText2 = "Sim, CH 5/6     ";
+    if ((oldText1 != newText1) | (oldText2 != newText2))
+      func_print_LCD(oldText1, newText2);
     set_channels = B00110000;
-    delay(150);
+    // delay(150);
   }
   if (digitalRead(acaba) == LOW)
   {
@@ -257,7 +259,7 @@ void SetAuxCH12(void)
       PonteiroDeFuncao = StateSetAmp;
     else
       PonteiroDeFuncao = SetAuxCH34;
-    delay(150);
+     delay(250);
   }
 }
 
@@ -267,9 +269,9 @@ void SetAuxCH12(void)
 */
 void SetAuxCH34(void)
 {
-  text = "Flex.c/ Auxiliar?";
-  lcd.clear();
-  lcd.print(text);
+  newText1 = "Flex.c/ Auxiliar?";
+  if ((oldText1 != newText1) | (oldText2 != newText2))
+  func_print_LCD(newText1, "");
   passo = 1;
   unidade = "";
   variavel = aux_CH34;
@@ -278,25 +280,29 @@ void SetAuxCH34(void)
   if (variavel == 0)
   {
     aux_CH34 = false;
-    lcd.setCursor(0, 1);
-    lcd.print("Nao             ");
+    newText2 = "Nao             ";
+    if ((oldText1 != newText1) | (oldText2 != newText2))
+      func_print_LCD(oldText1, newText2);
     set_channels = B00000000;
-    delay(150);
+    //delay(150);
   }
   if (variavel == 1)
   {
     aux_CH34 = true;
-    lcd.setCursor(0, 1);
-    lcd.print("Sim, CH 7/8");
+    newText2 = "Sim, CH 7/8     ";
+    if ((oldText1 != newText1) | (oldText2 != newText2))
+      func_print_LCD(oldText1, newText2);
     set_channels = B11000000;
-    delay(150);
+    //delay(150);
   }
   if (digitalRead(acaba) == LOW)
   {
     channels = channels | set_channels;
     PonteiroDeFuncao = StateSetAmp;
+    digitalWrite(acaba, HIGH);
+    delay(250);
   }
-  delay(150);
+  //delay(150);
 }
 
 /**
@@ -307,8 +313,6 @@ void StateSetAmp(void)
 {
   if ((B00000011 & channels) > 0)
   {
-    digitalWrite(acaba, HIGH);
-    delay(150);
     while (digitalRead(acaba) == HIGH)
     {
       text = "CorrenteExtensao";
@@ -317,14 +321,15 @@ void StateSetAmp(void)
       unidade = "mA (CH [1,2])";
       print = true;
       corrente_CH12 = func_set_parametro(variavel, passo, text, unidade, print);
-      //corrente_CH56 = corrente_CH12;
-      delay(150);
+      // corrente_CH56 = corrente_CH12;
+      //delay(150);
     }
+    digitalWrite(acaba, HIGH);
+    delay(150);
+
   }
   if ((B00110000 & channels) > 0)
   {
-    digitalWrite(acaba, HIGH);
-    delay(150);
     while (digitalRead(acaba) == HIGH)
     {
       text = "Corrente Aux Ext";
@@ -333,13 +338,14 @@ void StateSetAmp(void)
       unidade = "mA (CH [5,6])";
       print = true;
       corrente_CH56 = func_set_parametro(variavel, passo, text, unidade, print);
-      delay(150);
+      //delay(150);
     }
+    digitalWrite(acaba, HIGH);
+    delay(150);
+
   }
   if ((B00001100 & channels) > 0)
   {
-    digitalWrite(acaba, HIGH);
-    delay(150);
     while (digitalRead(acaba) == HIGH)
     {
       text = "Corrente Flexao";
@@ -348,14 +354,15 @@ void StateSetAmp(void)
       unidade = "mA (CH [3,4])";
       print = true;
       corrente_CH34 = func_set_parametro(variavel, passo, text, unidade, print);
-      //corrente_CH78 = corrente_CH34;
-      delay(150);
+      // corrente_CH78 = corrente_CH34;
+      //delay(150);
     }
+    digitalWrite(acaba, HIGH);
+    delay(150);
+
   }
   if ((B11000000 & channels) > 0)
   {
-    digitalWrite(acaba, HIGH);
-    delay(150);
     while (digitalRead(acaba) == HIGH)
     {
       text = "Corrente AuxFlex";
@@ -364,8 +371,11 @@ void StateSetAmp(void)
       unidade = "mA (CH [7,8])";
       print = true;
       corrente_CH78 = func_set_parametro(variavel, passo, text, unidade, print);
-      delay(150);
+      //delay(150);
     }
+      digitalWrite(acaba, HIGH);
+          delay(150);
+
   }
   PonteiroDeFuncao = StateSetLP;
 }
@@ -379,16 +389,19 @@ void StateSetLP(void)
   text = "Largura de Pulso:";
   variavel = pw;
   passo = 10;
-  unidade = "ms";
+  unidade = "micro seg";
   print = true;
   pw = func_set_parametro(variavel, passo, text, unidade, print);
-  delay(150);
+  //delay(150);
   if (digitalRead(acaba) == LOW)
   {
     PonteiroDeFuncao = StateSetFreq;
     digitalWrite(acaba, HIGH);
+  delay(150);
   }
+
 }
+
 
 /**
 * @brief      Estado para selecionar a Frequencia (única para todos os canais)
@@ -401,12 +414,14 @@ void StateSetFreq(void)
   unidade = "Hz";
   print = true;
   freq = func_set_parametro(variavel, passo, text, unidade, print);
-  delay(150);
+  //delay(150);
   if (digitalRead(acaba) == LOW)
   {
     PonteiroDeFuncao = Send;
     digitalWrite(acaba, HIGH);
+    delay(150);
   }
+
 }
 
 /**
@@ -464,16 +479,12 @@ void Send(void)
   lcd.print(channels, BIN);
   lcd.setCursor(15, 1);
   lcd.print(mode);
-
-EEPROM.write(0, (byte)corrente_CH12);
-EEPROM.write(1, (byte)corrente_CH34);
-EEPROM.write(2, (byte)corrente_CH56);
-EEPROM.write(3, (byte)corrente_CH78);
-EEPROM.write(4, (byte)(pw/10));
-EEPROM.write(5, (byte)freq);
-
-
-
+  EEPROM.write(0,(byte) corrente_CH12);
+  EEPROM.write(1,(byte) corrente_CH34);
+  EEPROM.write(2,(byte) corrente_CH56);
+  EEPROM.write(3,(byte) corrente_CH78);
+  EEPROM.write(4,(byte) (pw/10));
+  EEPROM.write(5,(byte) freq);
 }
 
 /**
@@ -486,9 +497,10 @@ void waiting(void)
     flag = Serial.readString();
     if (flag.equals("a"))
     {
-      lcd.clear();
-      lcd.print("Iniciando estimulacao");
-      delay(1000);
+      newText1 = "Iniciando estimulacao";
+      if ((oldText1 != newText1) | (oldText2 != newText2))
+        func_print_LCD(newText1, "");
+      // delay(1000);
       PonteiroDeFuncao = Runing;
     }
   }
@@ -531,14 +543,21 @@ int func_set_parametro(int variavel, int passo, String text, String unidade, boo
   BTN_Down = digitalRead(desce);
   if (print == true)
   {
-    lcd.clear();
-    lcd.print(text);
-    lcd.setCursor(0, 1);
-    lcd.print(variavel);
-    lcd.print(" ");
-    lcd.print(unidade);
-    lcd.print("   ");
-    delay(150);
+    newText1 = text;
+    newText2 = String(variavel);
+    if ((newText1 != oldText1) | (newText2 != oldText2))
+    {
+      func_print_LCD(newText1, newText2);
+      // lcd.clear();
+      // lcd.print(text);
+      // lcd.setCursor(0, 1);
+      // lcd.print(variavel);
+      lcd.print(" ");
+      lcd.print(unidade);
+      lcd.print("   ");
+    }
+
+    // delay(150);
   }
   if (BTN_Up == LOW && ((((millis() - lastSwitchTimeUp) > switchTimeUp) && lastSwitchTimeUp != 0) || lastReadingUp == HIGH))
   {
@@ -550,7 +569,7 @@ int func_set_parametro(int variavel, int passo, String text, String unidade, boo
     lastSwitchTimeUp = millis();
     lastReadingUp = BTN_Up;
     variavel = variavel + passo;
-    delay(150);
+    delay(500);
   }
   if (BTN_Up == HIGH)
   {
@@ -573,7 +592,7 @@ int func_set_parametro(int variavel, int passo, String text, String unidade, boo
     {
       variavel = 0;
     }
-    delay(150);
+    delay(500);
   }
   if (BTN_Down == HIGH)
   {
@@ -630,4 +649,15 @@ int qtdAlgarismos(int numero)
     cont++;
   }
   return cont;
+}
+
+void func_print_LCD(String linha1, String linha2)
+{
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print(linha1);
+  lcd.setCursor(0, 1);
+  lcd.print(linha2);
+  oldText1 = linha1;
+  oldText2 = linha2;
 }
