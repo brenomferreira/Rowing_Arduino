@@ -14,12 +14,13 @@ bool config = true;
 bool print;
 bool run = false;
 bool stim = true;
-byte channels = B00000000;
-byte set_channels = B00000000;
 String newText1;
 String newText2;
 String oldText1;
 String oldText2;
+byte channels = B00000000;
+byte set_channels = B00000000;
+char mode = 0;
 // int corrente_CH12 = 12;
 // int corrente_CH34 = 6;
 // int corrente_CH56 = 10;
@@ -31,10 +32,9 @@ int corrente_CH34 = (int) EEPROM.read(1);
 int corrente_CH56 = (int) EEPROM.read(2);
 int corrente_CH78 = (int) EEPROM.read(3);
 int pw = (int) (EEPROM.read(4) * 10);
-int freq = (int) EEPROM.read(5);
+int freq = (int) (EEPROM.read(5) * 5);
 int temp = 0;
 char acaba = 3;
-char mode = 0;
 char desce = 4;
 char passo;
 char sobe = 2;
@@ -176,6 +176,9 @@ void StateSetMov(void)
 {
   // para a funcao
   // int mode = 2;
+channels = B00000000;
+set_channels = B00000000;
+mode = 0;
   newText1 = "Sel.Movimento(s):";
   if ((oldText1 != newText1) | (oldText2 != newText2))
     func_print_LCD(newText1, "");
@@ -216,7 +219,7 @@ void StateSetMov(void)
       PonteiroDeFuncao = SetAuxCH34;
     else
       PonteiroDeFuncao = SetAuxCH12;
-    delay(150);
+    delay(250);
   }
 }
 
@@ -325,7 +328,7 @@ void StateSetAmp(void)
       //delay(150);
     }
     digitalWrite(acaba, HIGH);
-    delay(150);
+    delay(250);
 
   }
   if ((B00110000 & channels) > 0)
@@ -341,7 +344,7 @@ void StateSetAmp(void)
       //delay(150);
     }
     digitalWrite(acaba, HIGH);
-    delay(150);
+    delay(250);
 
   }
   if ((B00001100 & channels) > 0)
@@ -358,7 +361,7 @@ void StateSetAmp(void)
       //delay(150);
     }
     digitalWrite(acaba, HIGH);
-    delay(150);
+    delay(250);
 
   }
   if ((B11000000 & channels) > 0)
@@ -374,7 +377,7 @@ void StateSetAmp(void)
       //delay(150);
     }
       digitalWrite(acaba, HIGH);
-          delay(150);
+          delay(250);
 
   }
   PonteiroDeFuncao = StateSetLP;
@@ -397,7 +400,7 @@ void StateSetLP(void)
   {
     PonteiroDeFuncao = StateSetFreq;
     digitalWrite(acaba, HIGH);
-  delay(150);
+  delay(250);
   }
 
 }
@@ -419,7 +422,7 @@ void StateSetFreq(void)
   {
     PonteiroDeFuncao = Send;
     digitalWrite(acaba, HIGH);
-    delay(150);
+    delay(250);
   }
 
 }
@@ -484,7 +487,7 @@ void Send(void)
   EEPROM.write(2,(byte) corrente_CH56);
   EEPROM.write(3,(byte) corrente_CH78);
   EEPROM.write(4,(byte) (pw/10));
-  EEPROM.write(5,(byte) freq);
+  EEPROM.write(5,(byte) (freq)/5);
 }
 
 /**
