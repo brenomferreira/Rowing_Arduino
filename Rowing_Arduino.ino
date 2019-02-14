@@ -10,36 +10,37 @@ LiquidCrystal lcd(9, 7, 8, 12, 10, 11);
 * máquina de estados que deve ser executada */
 bool aux_CH12 = false;
 bool aux_CH34 = false;
-bool config = true;
-bool print;
-bool run = false;
-bool stim = true;
-String newText1;
-String newText2;
-String oldText1;
-String oldText2;
-byte channels = B00000000;
-byte set_channels = B00000000;
-char mode = 0;
 // int corrente_CH12 = 12;
 // int corrente_CH34 = 6;
 // int corrente_CH56 = 10;
 // int corrente_CH78 = 8;
-// int pw = 300;
 // int freq = 40;
+// int pw = 300;
+bool config = true;
+bool print;
+bool run = false;
+bool stim = true;
+byte channels = B00000000;
+byte set_channels = B00000000;
+char acaba = 3;
+char desce = 4;
+char mode = 0;
+char passo;
+char sobe = 2;
 int corrente_CH12 = (int) EEPROM.read(0);
 int corrente_CH34 = (int) EEPROM.read(1);
 int corrente_CH56 = (int) EEPROM.read(2);
 int corrente_CH78 = (int) EEPROM.read(3);
-int pw = (int) (EEPROM.read(4) * 10);
 int freq = (int) (EEPROM.read(5) * 5);
+int pw = (int) (EEPROM.read(4) * 10);
 int temp = 0;
-char acaba = 3;
-char desce = 4;
-char passo;
-char sobe = 2;
 int variavel;
+int variavel_old;
 String flag;
+String newText1;
+String newText2;
+String oldText1;
+String oldText2;
 String text;
 String unidade;
 void(* PonteiroDeFuncao) ();
@@ -123,6 +124,9 @@ void loop()
           stim = false;
           config = true;
           PonteiroDeFuncao = StateSetMov;
+          channels = B00000000;
+          set_channels = B00000000;
+          mode = 0;
         }
         delay(150);
       }
@@ -176,9 +180,6 @@ void StateSetMov(void)
 {
   // para a funcao
   // int mode = 2;
-channels = B00000000;
-set_channels = B00000000;
-mode = 0;
   newText1 = "Sel.Movimento(s):";
   if ((oldText1 != newText1) | (oldText2 != newText2))
     func_print_LCD(newText1, "");
@@ -229,32 +230,27 @@ mode = 0;
 */
 void SetAuxCH12(void)
 {
-  newText1 = "Ext.c/ Auxiliar?";
-  if ((oldText1 != newText1) | (oldText2 != newText2))
-    func_print_LCD(newText1, "");
   passo = 1;
   unidade = "";
-  variavel = aux_CH12;
+  variavel = ((int) aux_CH12) + 128;
+  variavel_old = variavel;
   print = false;
   variavel = func_set_parametro(variavel, passo, text, unidade, print);
-  if (variavel == 0)
+  if (variavel != variavel_old)
+    aux_CH12 = !aux_CH12;
+  if (aux_CH12 == false)
   {
-    aux_CH12 = false;
     newText2 = "Nao             ";
-    if ((oldText1 != newText1) | (oldText2 != newText2))
-      func_print_LCD(oldText1, newText2);
     set_channels = B00000000;
-    // delay(150);
   }
-  if (variavel == 1)
+  if (aux_CH12 == true)
   {
-    aux_CH12 = true;
     newText2 = "Sim, CH 5/6     ";
-    if ((oldText1 != newText1) | (oldText2 != newText2))
-      func_print_LCD(oldText1, newText2);
     set_channels = B00110000;
-    // delay(150);
   }
+  newText1 = "Ext.c/ Auxiliar?";
+  if ((oldText1 != newText1) | (oldText2 != newText2))
+    func_print_LCD(newText1, newText2);
   if (digitalRead(acaba) == LOW)
   {
     channels = channels | set_channels;
@@ -262,8 +258,45 @@ void SetAuxCH12(void)
       PonteiroDeFuncao = StateSetAmp;
     else
       PonteiroDeFuncao = SetAuxCH34;
-     delay(250);
+    delay(250);
   }
+  /*
+  newText1 = "Ext.c/ Auxiliar?";
+  if ((oldText1 != newText1) | (oldText2 != newText2))
+  func_print_LCD(newText1, "");
+  passo = 1;
+  unidade = "";
+  variavel = aux_CH12;
+  print = false;
+  variavel = func_set_parametro(variavel, passo, text, unidade, print);
+  if (variavel == 0)
+  {
+  aux_CH12 = false;
+  newText2 = "Nao             ";
+  if ((oldText1 != newText1) | (oldText2 != newText2))
+  func_print_LCD(oldText1, newText2);
+  set_channels = B00000000;
+  // delay(150);
+  }
+  if (variavel == 1)
+  {
+  aux_CH12 = true;
+  newText2 = "Sim, CH 5/6     ";
+  if ((oldText1 != newText1) | (oldText2 != newText2))
+  func_print_LCD(oldText1, newText2);
+  set_channels = B00110000;
+  // delay(150);
+  }
+  if (digitalRead(acaba) == LOW)
+  {
+  channels = channels | set_channels;
+  if (mode == 1)
+  PonteiroDeFuncao = StateSetAmp;
+  else
+  PonteiroDeFuncao = SetAuxCH34;
+  delay(250);
+  }
+  */
 }
 
 /**
@@ -272,9 +305,43 @@ void SetAuxCH12(void)
 */
 void SetAuxCH34(void)
 {
+
+
+
+  passo = 1;
+  unidade = "";
+  variavel = ((int) aux_CH34) + 128;
+  variavel_old = variavel;
+  print = false;
+  variavel = func_set_parametro(variavel, passo, text, unidade, print);
+  if (variavel != variavel_old)
+    aux_CH34 = !aux_CH34;
+  if (aux_CH34 == false)
+  {
+    newText2 = "Nao             ";
+    set_channels = B00000000;
+  }
+  if (aux_CH34 == true)
+  {
+    newText2 = "Sim, CH 7/8     ";
+    set_channels = B11000000;
+  }
+  newText1 = "Ext.c/ Auxiliar?";
+  if ((oldText1 != newText1) | (oldText2 != newText2))
+    func_print_LCD(newText1, newText2);
+  if (digitalRead(acaba) == LOW)
+  {
+    channels = channels | set_channels;
+    PonteiroDeFuncao = StateSetAmp;
+    digitalWrite(acaba, HIGH);
+    delay(250);
+  }
+
+
+  /*
   newText1 = "Flex.c/ Auxiliar?";
   if ((oldText1 != newText1) | (oldText2 != newText2))
-  func_print_LCD(newText1, "");
+    func_print_LCD(newText1, "");
   passo = 1;
   unidade = "";
   variavel = aux_CH34;
@@ -287,7 +354,7 @@ void SetAuxCH34(void)
     if ((oldText1 != newText1) | (oldText2 != newText2))
       func_print_LCD(oldText1, newText2);
     set_channels = B00000000;
-    //delay(150);
+    // delay(150);
   }
   if (variavel == 1)
   {
@@ -296,7 +363,7 @@ void SetAuxCH34(void)
     if ((oldText1 != newText1) | (oldText2 != newText2))
       func_print_LCD(oldText1, newText2);
     set_channels = B11000000;
-    //delay(150);
+    // delay(150);
   }
   if (digitalRead(acaba) == LOW)
   {
@@ -305,7 +372,9 @@ void SetAuxCH34(void)
     digitalWrite(acaba, HIGH);
     delay(250);
   }
-  //delay(150);
+  // delay(150);
+
+*/
 }
 
 /**
@@ -325,11 +394,10 @@ void StateSetAmp(void)
       print = true;
       corrente_CH12 = func_set_parametro(variavel, passo, text, unidade, print);
       // corrente_CH56 = corrente_CH12;
-      //delay(150);
+      // delay(150);
     }
     digitalWrite(acaba, HIGH);
     delay(250);
-
   }
   if ((B00110000 & channels) > 0)
   {
@@ -341,11 +409,10 @@ void StateSetAmp(void)
       unidade = "mA (CH [5,6])";
       print = true;
       corrente_CH56 = func_set_parametro(variavel, passo, text, unidade, print);
-      //delay(150);
+      // delay(150);
     }
     digitalWrite(acaba, HIGH);
     delay(250);
-
   }
   if ((B00001100 & channels) > 0)
   {
@@ -358,11 +425,10 @@ void StateSetAmp(void)
       print = true;
       corrente_CH34 = func_set_parametro(variavel, passo, text, unidade, print);
       // corrente_CH78 = corrente_CH34;
-      //delay(150);
+      // delay(150);
     }
     digitalWrite(acaba, HIGH);
     delay(250);
-
   }
   if ((B11000000 & channels) > 0)
   {
@@ -374,11 +440,10 @@ void StateSetAmp(void)
       unidade = "mA (CH [7,8])";
       print = true;
       corrente_CH78 = func_set_parametro(variavel, passo, text, unidade, print);
-      //delay(150);
+      // delay(150);
     }
-      digitalWrite(acaba, HIGH);
-          delay(250);
-
+    digitalWrite(acaba, HIGH);
+    delay(250);
   }
   PonteiroDeFuncao = StateSetLP;
 }
@@ -395,16 +460,14 @@ void StateSetLP(void)
   unidade = "micro seg";
   print = true;
   pw = func_set_parametro(variavel, passo, text, unidade, print);
-  //delay(150);
+  // delay(150);
   if (digitalRead(acaba) == LOW)
   {
     PonteiroDeFuncao = StateSetFreq;
     digitalWrite(acaba, HIGH);
-  delay(250);
+    delay(250);
   }
-
 }
-
 
 /**
 * @brief      Estado para selecionar a Frequencia (única para todos os canais)
@@ -417,14 +480,13 @@ void StateSetFreq(void)
   unidade = "Hz";
   print = true;
   freq = func_set_parametro(variavel, passo, text, unidade, print);
-  //delay(150);
+  // delay(150);
   if (digitalRead(acaba) == LOW)
   {
     PonteiroDeFuncao = Send;
     digitalWrite(acaba, HIGH);
     delay(250);
   }
-
 }
 
 /**
@@ -480,14 +542,14 @@ void Send(void)
   PonteiroDeFuncao = waiting;
   lcd.setCursor(0, 1);
   lcd.print(channels, BIN);
-  lcd.setCursor(15, 1);
-  lcd.print(mode);
+  //lcd.setCursor(15, 1);
+  //lcd.print(mode);
   EEPROM.write(0,(byte) corrente_CH12);
   EEPROM.write(1,(byte) corrente_CH34);
   EEPROM.write(2,(byte) corrente_CH56);
   EEPROM.write(3,(byte) corrente_CH78);
   EEPROM.write(4,(byte) (pw/10));
-  EEPROM.write(5,(byte) (freq)/5);
+  EEPROM.write(5,(byte) (freq) /5);
 }
 
 /**
@@ -559,7 +621,6 @@ int func_set_parametro(int variavel, int passo, String text, String unidade, boo
       lcd.print(unidade);
       lcd.print("   ");
     }
-
     // delay(150);
   }
   if (BTN_Up == LOW && ((((millis() - lastSwitchTimeUp) > switchTimeUp) && lastSwitchTimeUp != 0) || lastReadingUp == HIGH))
